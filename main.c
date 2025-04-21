@@ -153,21 +153,16 @@ void read_client(int i)
     while (srch != NULL) {  
         *srch = '\0';
         int len = strlen(ptr);
-        char* new_buff = (char*)realloc(msg_buff, len + 128);
-        if (new_buff == NULL)
-            fatal();
-        msg_buff = new_buff;
-
+        char lil_buff[64];
+        
         // check error
-        int ret = sprintf(msg_buff, "client %d: %s\n", clients[i].id, ptr);
+        int ret = sprintf(lil_buff, "client %d: ", clients[i].id);
         if (ret == -1)
             fatal();
 
-        send_2_all_clients(i, msg_buff, ret);
-        
-        // Libérer msg_buff à chaque itération pour éviter les fuites
-        free(msg_buff);
-        msg_buff = NULL;
+        send_2_all_clients(i, lil_buff, ret);
+        send_2_all_clients(i, ptr, len);
+        send_2_all_clients(i, "\n", 1);
 
         ptr = srch + 1;
         srch = strstr(ptr, "\n");
@@ -218,15 +213,8 @@ int main (int ac, char **av)
         fd_set read_fds = fds; 
         int ready = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
        
-        if (ready == -1) {
-            // Les signaux comme SIGINT causent EINTR
-            if (errno == EINTR) {
-                // Le signal a interrompu select(), nettoyons et sortons proprement
-                free_memory();
-                return 0;
-            }
+        if (ready == -1)
             fatal();
-        }
             
         if (FD_ISSET(server_fd, &read_fds))
             new_client();
