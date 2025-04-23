@@ -52,7 +52,7 @@ void free_memory(void)
 
 void fatal()
 {
-    print(2, "Error fatal\n");
+    print(2, "Fatal error\n");
     free_memory();
     exit(1);
 }
@@ -75,7 +75,6 @@ void broadcast(int sender, char *msg)
 void new_client(void)
 {
     static int nb = 0;
-    // print(1, "new connection\n");
 
     int new_fd = accept(server_fd, NULL, NULL);
     if (new_fd == -1)
@@ -127,7 +126,7 @@ void read_client(int i)
         clients[i].buff = new_buff;
     }
 
-    // read what has been received
+    // recv
     int size = recv(clients[i].fd, clients[i].buff + clients[i].size, 1024 - 1, 0);
     if (size == -1)
         fatal();
@@ -143,10 +142,10 @@ void read_client(int i)
     clients[i].size += size;
     clients[i].buff[clients[i].size] = '\0';
 
+    // searching for '\n'
     char *ptr = clients[i].buff;
     char *srch = strstr(ptr, "\n");
 
-    // send to everyone each time there is a '\n'
     while (srch != NULL)
     {
         *srch = '\0';
@@ -161,12 +160,11 @@ void read_client(int i)
         srch = strstr(ptr, "\n");
     }
 
-    // if still message left with no '\n'
+    // if there is sill message left without '\n'
     if (ptr != clients[i].buff)
     {
-        int len = strlen(ptr);
         strcpy(clients[i].buff, ptr);
-        clients[i].size = len;
+        clients[i].size = strlen(ptr);
     }
 }
 
